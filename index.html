@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Snake Navigation</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: #050505;
+            overflow-x: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Background Canvas */
+        #snakeCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Parallax Container */
+        .parallax-container {
+            position: relative;
+            z-index: 2;
+            height: 180vh; 
+        }
+
+        /* Stacked Button Container Centered on Screen */
+        .button-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column; /* Stacks buttons vertically (one over the other) */
+            gap: 25px;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        /* Neon Button Styling with Rounded Corners */
+        .neon-btn {
+            text-decoration: none;
+            font-size: 1.3rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            padding: 15px 50px;
+            border-radius: 50px; /* Fully rounded/pill-shaped corners */
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: transparent;
+            text-align: center;
+            width: 100%; /* Ensures all stacked buttons have equal width */
+        }
+
+        /* Cyan Neon - Permanent Glow on Text & Border */
+        .btn-cyan {
+            color: #00f3ff;
+            border: 2px solid #00f3ff;
+            text-shadow: 0 0 8px #00f3ff, 0 0 15px #00f3ff;
+            box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.4), 0 0 20px rgba(0, 243, 255, 0.4);
+        }
+        .btn-cyan:hover {
+            color: #050505;
+            background: #00f3ff;
+            box-shadow: 0 0 30px #00f3ff, 0 0 60px #00f3ff;
+            text-shadow: none;
+        }
+
+        /* Magenta Neon - Permanent Glow on Text & Border */
+        .btn-magenta {
+            color: #ff007f;
+            border: 2px solid #ff007f;
+            text-shadow: 0 0 8px #ff007f, 0 0 15px #ff007f;
+            box-shadow: inset 0 0 15px rgba(255, 0, 127, 0.4), 0 0 20px rgba(255, 0, 127, 0.4);
+        }
+        .btn-magenta:hover {
+            color: #050505;
+            background: #ff007f;
+            box-shadow: 0 0 30px #ff007f, 0 0 60px #ff007f;
+            text-shadow: none;
+        }
+
+        /* Yellow Neon - Permanent Glow on Text & Border */
+        .btn-yellow {
+            color: #ccff00;
+            border: 2px solid #ccff00;
+            text-shadow: 0 0 8px #ccff00, 0 0 15px #ccff00;
+            box-shadow: inset 0 0 15px rgba(204, 255, 0, 0.4), 0 0 20px rgba(204, 255, 0, 0.4);
+        }
+        .btn-yellow:hover {
+            color: #050505;
+            background: #ccff00;
+            box-shadow: 0 0 30px #ccff00, 0 0 60px #ccff00;
+            text-shadow: none;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="snakeCanvas"></canvas>
+
+    <div class="parallax-container">
+        <div class="button-overlay">
+            <a href="Game.html" class="neon-btn btn-cyan">Game.</a>
+            <a href="Trial.html" class="neon-btn btn-magenta">Trial.</a>
+            <a href="Project.html" class="neon-btn btn-yellow">Project.</a>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('snakeCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const snakes = [];
+        const numSnakes = 10; 
+        const segmentSize = 8;
+
+        function getRandomColor() {
+            const colors = [
+                'rgba(255, 0, 51, ',   
+                'rgba(204, 0, 0, ',    
+                'rgba(255, 64, 64, ',  
+                'rgba(255, 255, 255, ',
+                'rgba(240, 240, 250, ' 
+            ];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        for (let i = 0; i < numSnakes; i++) {
+            snakes.push({
+                segments: [],
+                length: Math.floor(Math.random() * 20) + 15, 
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                angle: Math.random() * Math.PI * 2,
+                speed: Math.random() * 2 + 1.5,
+                turnSpeed: (Math.random() - 0.5) * 0.2,
+                colorBase: getRandomColor()
+            });
+        }
+
+        function animateSnakes() {
+            ctx.fillStyle = 'rgba(5, 5, 5, 0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            snakes.forEach(snake => {
+                if (Math.random() < 0.05) {
+                    snake.turnSpeed = (Math.random() - 0.5) * 0.3;
+                }
+                snake.angle += snake.turnSpeed;
+
+                snake.x += Math.cos(snake.angle) * snake.speed;
+                snake.y += Math.sin(snake.angle) * snake.speed;
+
+                if (snake.x < -50) snake.x = canvas.width + 50;
+                if (snake.x > canvas.width + 50) snake.x = -50;
+                if (snake.y < -50) snake.y = canvas.height + 50;
+                if (snake.y > canvas.height + 50) snake.y = -50;
+
+                snake.segments.unshift({ x: snake.x, y: snake.y });
+                if (snake.segments.length > snake.length) {
+                    snake.segments.pop();
+                }
+
+                snake.segments.forEach((seg, index) => {
+                    const opacity = 1 - (index / snake.length);
+                    ctx.fillStyle = `${snake.colorBase}${opacity})`;
+                    
+                    const currentSize = segmentSize * (1 - (index / snake.length) * 0.5);
+                    
+                    ctx.beginPath();
+                    ctx.arc(seg.x, seg.y, currentSize, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            });
+
+            requestAnimationFrame(animateSnakes);
+        }
+        animateSnakes();
+
+        let lastScrollY = window.scrollY;
+        window.addEventListener('scroll', () => {
+            const currentScrollY = window.scrollY;
+            const scrollDelta = currentScrollY - lastScrollY;
+            lastScrollY = currentScrollY;
+
+            snakes.forEach(snake => {
+                snake.y -= scrollDelta * 0.3; 
+            });
+        });
+    </script>
+</body>
+</html>
